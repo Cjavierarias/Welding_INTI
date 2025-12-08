@@ -1,0 +1,352 @@
+/* Estilos de accesibilidad */
+
+/* Modo alto contraste */
+.high-contrast {
+  --primary-color: #000000 !important;
+  --secondary-color: #ffffff !important;
+  --background-color: #000000 !important;
+  --text-color: #ffffff !important;
+  --border-color: #ffffff !important;
+}
+
+.high-contrast * {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+.high-contrast .MuiPaper-root {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .MuiButton-contained {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .MuiButton-outlined {
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Modos para daltonismo */
+.color-blind-protanopia {
+  filter: url('#protanopia-filter');
+}
+
+.color-blind-deuteranopia {
+  filter: url('#deuteranopia-filter');
+}
+
+.color-blind-tritanopia {
+  filter: url('#tritanopia-filter');
+}
+
+/* Filtros SVG para corrección de color */
+.svg-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Tamaños de texto dinámicos */
+.text-size-small {
+  font-size: 12px !important;
+}
+
+.text-size-normal {
+  font-size: 16px !important;
+}
+
+.text-size-large {
+  font-size: 20px !important;
+}
+
+.text-size-xlarge {
+  font-size: 24px !important;
+}
+
+.text-size-small .MuiTypography-root {
+  font-size: 12px !important;
+}
+
+.text-size-normal .MuiTypography-root {
+  font-size: 16px !important;
+}
+
+.text-size-large .MuiTypography-root {
+  font-size: 20px !important;
+}
+
+.text-size-xlarge .MuiTypography-root {
+  font-size: 24px !important;
+}
+
+/* Reducción de movimiento */
+.reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.reduce-motion {
+  scroll-behavior: auto !important;
+}
+
+/* Enfoque mejorado para teclado */
+:focus {
+  outline: 3px solid #2196f3 !important;
+  outline-offset: 2px !important;
+}
+
+.Mui-focused {
+  outline: 3px solid #2196f3 !important;
+  outline-offset: 2px !important;
+}
+
+/* Mejoras de contraste para elementos específicos */
+.accessible-button {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  padding: 12px 24px !important;
+  border: 2px solid transparent !important;
+}
+
+.accessible-button:focus {
+  border-color: #2196f3 !important;
+}
+
+.accessible-input {
+  border: 2px solid #666 !important;
+  padding: 12px !important;
+  font-size: 16px !important;
+}
+
+.accessible-input:focus {
+  border-color: #2196f3 !important;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* Indicadores de estado mejorados */
+.status-indicator {
+  position: relative;
+  padding-left: 24px !important;
+}
+
+.status-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.status-indicator.active::before {
+  background-color: currentColor;
+}
+
+.status-indicator.warning::before {
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.error::before {
+  animation: shake 0.5s infinite;
+}
+
+/* Mejoras para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aria-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Mejoras de navegación por teclado */
+.tab-focusable {
+  outline: none !important;
+}
+
+.tab-focusable:focus-visible {
+  outline: 3px solid #2196f3 !important;
+  outline-offset: 2px !important;
+}
+
+/* Contraste mejorado para gráficos */
+.high-contrast-chart .recharts-cartesian-grid line {
+  stroke: #ffffff !important;
+  stroke-opacity: 0.3 !important;
+}
+
+.high-contrast-chart .recharts-text {
+  fill: #ffffff !important;
+}
+
+.high-contrast-chart .recharts-line {
+  stroke-width: 3px !important;
+}
+
+/* Mejoras para modo oscuro con alto contraste */
+@media (prefers-color-scheme: dark) {
+  .high-contrast {
+    --primary-color: #ffffff !important;
+    --secondary-color: #000000 !important;
+    --background-color: #000000 !important;
+    --text-color: #ffffff !important;
+    --border-color: #ffffff !important;
+  }
+}
+
+/* Animaciones simplificadas */
+.simple-animations .MuiCircularProgress-root {
+  animation: none !important;
+}
+
+.simple-animations .MuiLinearProgress-root {
+  animation: none !important;
+}
+
+.simple-animations [class*="MuiCollapse-root"] {
+  transition: none !important;
+}
+
+/* Indicadores táctiles mejorados */
+.touch-indicator {
+  position: relative;
+}
+
+.touch-indicator::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border: 2px solid rgba(33, 150, 243, 0.3);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Mejoras para zoom del navegador */
+.zoom-friendly {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.zoom-friendly img {
+  max-width: 100%;
+  height: auto;
+}
+
+.zoom-friendly table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+/* Texto alternativo para imágenes */
+.image-with-description {
+  position: relative;
+}
+
+.image-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Mejoras para formularios */
+.accessible-form-group {
+  margin-bottom: 24px;
+}
+
+.accessible-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.accessible-form-group .helper-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.accessible-form-group.error {
+  border-left: 4px solid #f44336;
+  padding-left: 12px;
+}
+
+.accessible-form-group.error label {
+  color: #f44336;
+}
+
+/* Mejoras para modal/dialog */
+.accessible-dialog .MuiDialog-paper {
+  max-width: min(600px, 90vw) !important;
+}
+
+.accessible-dialog .MuiDialogTitle-root {
+  padding: 24px 24px 16px !important;
+}
+
+.accessible-dialog .MuiDialogContent-root {
+  padding: 0 24px 24px !important;
+}
+
+.accessible-dialog .MuiDialogActions-root {
+  padding: 16px 24px !important;
+}
+
+/* Animaciones clave para estados */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Transiciones suaves para cambios de tema */
+.theme-transition * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
