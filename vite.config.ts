@@ -31,7 +31,9 @@ export default defineConfig({
       }
     })
   ],
+  base: '/Welding_INTI/', // IMPORTANTE para GitHub Pages
   build: {
-    target: 'es2020'
+    target: 'es2020',
+    outDir: 'dist'
   }
 })
