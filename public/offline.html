@@ -11,7 +11,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -55,6 +55,8 @@
       font-weight: bold;
       cursor: pointer;
       transition: transform 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
     }
     
     .btn:hover {
@@ -69,6 +71,7 @@
     <p>No hay conexión a internet disponible. Esta aplicación funciona offline, pero algunas funciones pueden estar limitadas.</p>
     <p>Verifica tu conexión y vuelve a intentarlo.</p>
     <button class="btn" onclick="window.location.reload()">Reintentar</button>
+    <a href="/Welding_INTI/" class="btn" style="margin-left: 10px;">Volver al inicio</a>
   </div>
 </body>
 </html>
