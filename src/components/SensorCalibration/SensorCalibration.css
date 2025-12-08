@@ -1,0 +1,145 @@
+.calibration-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+}
+
+.calibration-step {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  margin: 20px 0;
+  text-align: center;
+  animation: slideIn 0.5s ease-out;
+}
+
+.calibration-indicator {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+  background: conic-gradient(
+    from 0deg,
+    #4caf50 0%,
+    #4caf50 var(--progress),
+    rgba(255, 255, 255, 0.1) var(--progress),
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  position: relative;
+}
+
+.calibration-indicator::before {
+  content: '';
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: #1a1a1a;
+}
+
+.calibration-percentage {
+  position: relative;
+  z-index: 1;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.pattern-guide {
+  border: 3px dashed #4caf50;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 20px 0;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.sensor-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.sensor-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.sensor-card.active {
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4caf50;
+}
+
+.sensor-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.instruction-text {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 15px 0;
+}
+
+.calibration-warning {
+  border-left: 4px solid #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+  padding: 15px;
+  border-radius: 0 8px 8px 0;
+  margin: 20px 0;
+}
+
+@media (max-width: 600px) {
+  .calibration-step {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .calibration-indicator {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .calibration-indicator::before {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .sensor-status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #4caf50;
+  animation: pulse-ring 1.5s infinite;
+}
