@@ -1,15 +1,18 @@
 const CACHE_NAME = 'welding-simulator-v1';
-const OFFLINE_URL = '/offline.html';
+const BASE_PATH = '/Welding_INTI/';
+const OFFLINE_URL = `${BASE_PATH}offline.html`;
 
-// Assets a cachear
+// Assets a cachear - TODAS las rutas deben incluir BASE_PATH
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
-  '/offline.html',
-  '/favicon.ico'
+  `${BASE_PATH}`,
+  `${BASE_PATH}index.html`,
+  `${BASE_PATH}manifest.json`,
+  `${BASE_PATH}icon-192x192.png`,
+  `${BASE_PATH}icon-512x512.png`,
+  `${BASE_PATH}offline.html`,
+  `${BASE_PATH}favicon.ico`,
+  `${BASE_PATH}assets/index.css`,
+  `${BASE_PATH}assets/index.js`
 ];
 
 // Instalación - Precaché de assets críticos
@@ -25,6 +28,9 @@ self.addEventListener('install', (event) => {
       .then(() => {
         console.log('Service Worker installed');
         return self.skipWaiting();
+      })
+      .catch(error => {
+        console.error('Cache addAll error:', error);
       })
   );
 });
@@ -50,32 +56,29 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Estrategia de cache: Network First, fallback a Cache
+// Estrategia de cache
 self.addEventListener('fetch', (event) => {
   // Ignorar solicitudes no GET
   if (event.request.method !== 'GET') return;
 
-  // Para solicitudes de la API, usar network first
-  if (event.request.url.includes('/api/')) {
+  const requestUrl = new URL(event.request.url);
+  
+  // Solo cachear solicitudes de nuestro dominio
+  if (!requestUrl.origin.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // Para navegación, usar network first, fallback a cache
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then((response) => {
-          // Clonar respuesta para cache
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          // Fallback a cache
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(OFFLINE_URL))
+        .then(response => response || caches.match(OFFLINE_URL))
     );
     return;
   }
 
-  // Para assets estáticos, usar cache first
+  // Para otros recursos, usar cache first
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -95,14 +98,18 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
+              })
+              .catch(error => {
+                console.error('Cache put error:', error);
               });
 
             return response;
           })
-          .catch(() => {
-            // Si falla la red y no está en cache, mostrar offline page
-            if (event.request.mode === 'navigate') {
-              return caches.match(OFFLINE_URL);
+          .catch(error => {
+            console.error('Fetch failed:', error);
+            // Para imágenes, puedes retornar un placeholder
+            if (event.request.destination === 'image') {
+              return caches.match(`${BASE_PATH}icon-192x192.png`);
             }
           });
       })
@@ -119,89 +126,23 @@ self.addEventListener('message', (event) => {
     const assets = event.data.payload.assets;
     event.waitUntil(
       caches.open(CACHE_NAME)
-        .then((cache) => cache.addAll(assets))
+        .then((cache) => cache.addAll(assets.map(asset => `${BASE_PATH}${asset}`)))
     );
   }
 });
 
-// Background Sync
+// Para GitHub Pages, simplificamos (no necesitamos Background Sync ni Push)
+// Background Sync (comentado para GitHub Pages)
+/*
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-welding-data') {
     event.waitUntil(syncWeldingData());
   }
 });
+*/
 
-async function syncWeldingData() {
-  try {
-    const db = await openIndexedDB();
-    const tx = db.transaction('sync-welding-data', 'readonly');
-    const store = tx.objectStore('sync-welding-data');
-    const unsyncedData = await getAllFromStore(store);
-    
-    for (const data of unsyncedData) {
-      // Aquí iría la lógica para enviar datos al servidor
-      console.log('Syncing data:', data);
-      
-      // Marcar como sincronizado
-      await markAsSynced(data.id);
-    }
-    
-    // Notificar al cliente
-    self.clients.matchAll().then((clients) => {
-      clients.forEach((client) => {
-        client.postMessage({
-          type: 'SYNC_COMPLETE',
-          payload: { count: unsyncedData.length }
-        });
-      });
-    });
-  } catch (error) {
-    console.error('Sync failed:', error);
-  }
-}
-
-function openIndexedDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('WeldingSimulatorDB', 2);
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-function getAllFromStore(store) {
-  return new Promise((resolve, reject) => {
-    const request = store.getAll();
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-function markAsSynced(id) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('WeldingSimulatorDB', 2);
-    
-    request.onsuccess = (event) => {
-      const db = event.target.result;
-      const tx = db.transaction('sync-welding-data', 'readwrite');
-      const store = tx.objectStore('sync-welding-data');
-      
-      const getRequest = store.get(id);
-      getRequest.onsuccess = () => {
-        const data = getRequest.result;
-        data.synced = true;
-        const putRequest = store.put(data);
-        putRequest.onsuccess = () => resolve();
-        putRequest.onerror = () => reject(putRequest.error);
-      };
-      getRequest.onerror = () => reject(getRequest.error);
-    };
-    
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// Push notifications
+// Push notifications (comentado para GitHub Pages)
+/*
 self.addEventListener('push', (event) => {
   let data = {};
   
@@ -211,8 +152,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body || 'Nueva notificación del simulador',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    icon: `${BASE_PATH}icon-192x192.png`,
+    badge: `${BASE_PATH}badge-72x72.png`,
     vibrate: [200, 100, 200],
     data: data.data || {},
     requireInteraction: data.requireInteraction || false
@@ -229,17 +170,16 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Si hay un cliente abierto, enfocarlo
         for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
+          if (client.url.includes(BASE_PATH) && 'focus' in client) {
             return client.focus();
           }
         }
         
-        // Si no hay cliente abierto, abrir uno nuevo
         if (clients.openWindow) {
-          return clients.openWindow('/');
+          return clients.openWindow(`${BASE_PATH}`);
         }
       })
   );
 });
+*/
