@@ -18,22 +18,34 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       }
     })
   ],
-  base: '/Welding_INTI/', // IMPORTANTE para GitHub Pages
+  base: '/Welding_INTI/', // ← ESTA ES LA PARTE MÁS IMPORTANTE
   build: {
     target: 'es2020',
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+          charts: ['chart.js', 'react-chartjs-2']
+        }
+      }
+    }
   }
 })
