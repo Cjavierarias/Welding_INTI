@@ -1,4 +1,3 @@
-# Welding_INTI
 # Simulador de Soldadura AR
 
 Una aplicación web progresiva (PWA) para simulación de técnicas de soldadura utilizando realidad aumentada y sensores del dispositivo.
