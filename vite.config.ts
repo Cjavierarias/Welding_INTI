@@ -9,6 +9,18 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
+        apple_touch_startup_image: [],
+        display: 'standalone',
+        background_color: '#121212',
+        theme_color: '#1976d2',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        short_name: 'WeldSim',
+        description: 'Simulador de soldadura con AR y sensores',
+        lang: 'es',
+
+        
         name: 'Simulador de Soldadura AR',
         short_name: 'WeldingSim',
         description: 'Simulador de técnicas de soldadura con realidad aumentada',
