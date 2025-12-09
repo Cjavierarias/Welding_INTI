@@ -75,6 +75,14 @@ const DemoMode: React.FC<DemoModeProps> = ({ open, onClose, onDataChange }) => {
       stability: currentStability,
       quality,
       timestamp: time,
+      
+      metrics: {
+      distance: currentDistance,
+      angle: { pitch: currentAngle, yaw: 0, roll: 0 },
+      speed: { approach: 2, lateral: 0 },
+      stability: currentStability,
+      }
+        
       markers: [{
         id: 1,
         corners: [
@@ -87,6 +95,7 @@ const DemoMode: React.FC<DemoModeProps> = ({ open, onClose, onDataChange }) => {
         size: 100,
         detected: true
       }]
+      
     };
     
     onDataChange(demoData);
