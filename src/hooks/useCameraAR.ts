@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import jsQR from 'jsqr';
+import { detectArucoMarkers } from '@thegrumpys/odv2-aruco';
 
 interface ARMarker {
   id: number;
@@ -31,6 +31,9 @@ interface CameraState {
   };
 }
 
+const MARKER_REAL_SIZE_MM = 100; // Tamaño físico del marcador (ajustar según impresión)
+const FOCAL_LENGTH_PX = 800; // Estimación para cámaras móviles promedio
+
 export const useCameraAR = () => {
   const [state, setState] = useState<CameraState>({
     isSupported: false,
@@ -50,7 +53,7 @@ export const useCameraAR = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
-  const lastMarkerData = useRef<any>(null);
+  const lastMarkerMetrics = useRef<any>(null);
   const lastTimestamp = useRef<number>(0);
 
   const checkCameraSupport = useCallback(() => {
@@ -62,17 +65,15 @@ export const useCameraAR = () => {
       if (!checkCameraSupport()) {
         throw new Error('Cámara no soportada');
       }
-
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          frameRate: { ideal: 60 },
+          frameRate: { ideal: 30 },
         },
         audio: false,
       });
-
       setState(prev => ({
         ...prev,
         stream,
@@ -80,11 +81,9 @@ export const useCameraAR = () => {
         isSupported: true,
         error: null,
       }));
-
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-
       return stream;
     } catch (error: any) {
       console.error('Error accessing camera:', error);
@@ -97,75 +96,42 @@ export const useCameraAR = () => {
     }
   }, [checkCameraSupport]);
 
-  const detectMarkers = useCallback((imageData: ImageData) => {
-    // Implementar detección de marcadores AR
-    // Por ahora, usamos jsQR para detectar códigos QR como marcadores simples
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    
-    const markers: ARMarker[] = [];
-    
-    if (code) {
-      markers.push({
-        id: 1,
-        corners: code.location.topLeftCorner,
-        center: code.location.topLeftCorner, // Simplificado
-        size: Math.abs(code.location.bottomRightCorner.x - code.location.topLeftCorner.x),
-        detected: true,
-      });
-    }
-    
-    return markers;
-  }, []);
-
-  const calculateMetrics = useCallback((markers: ARMarker[], timestamp: number) => {
-    if (markers.length === 0) {
-      return {
-        distance: null,
-        angle: { pitch: null, yaw: null, roll: null },
-        speed: { approach: null, lateral: null },
-        stability: 0,
-      };
-    }
-
-    const marker = markers[0];
+  const calculateMetricsFromMarker = useCallback((marker: any, timestamp: number) => {
     const now = timestamp;
     const dt = now - lastTimestamp.current;
     lastTimestamp.current = now;
 
-    // Calcular distancia basada en tamaño del marcador (simplificado)
-    const distance = marker.size > 0 ? 1000 / marker.size : null;
+    // Distancia basada en tamaño aparente
+    const pixelSize = Math.max(
+      Math.abs(marker.corners[1].x - marker.corners[0].x),
+      Math.abs(marker.corners[2].y - marker.corners[1].y)
+    );
+    const distance = pixelSize > 0 ? (MARKER_REAL_SIZE_MM * FOCAL_LENGTH_PX) / pixelSize : null;
 
-    // Calcular ángulos (simplificado - basado en posición en pantalla)
-    const centerX = marker.center.x;
-    const centerY = marker.center.y;
-    const pitch = centerY - 240; // Normalizado
-    const yaw = centerX - 320;
-    const roll = 0; // Necesitaríamos más información para calcular roll
+    // Centro del marcador
+    const centerX = marker.corners.reduce((sum: number, p: any) => sum + p.x, 0) / 4;
+    const centerY = marker.corners.reduce((sum: number, p: any) => sum + p.y, 0) / 4;
 
-    // Calcular velocidades
+    // Ángulos respecto al centro de la imagen
+    const screenCenterX = videoRef.current?.videoWidth / 2 || 320;
+    const screenCenterY = videoRef.current?.videoHeight / 2 || 240;
+    const yaw = ((centerX - screenCenterX) / screenCenterX) * 30; // grados
+    const pitch = ((centerY - screenCenterY) / screenCenterY) * 30;
+    const roll = 0; // requiere análisis de perspectiva
+
     let approachSpeed = null;
     let lateralSpeed = null;
-
-    if (lastMarkerData.current && dt > 0) {
-      const lastDistance = lastMarkerData.current.distance;
-      const lastCenterX = lastMarkerData.current.centerX;
-      
+    if (lastMarkerMetrics.current && dt > 0) {
+      const lastDistance = lastMarkerMetrics.current.distance;
       if (distance !== null && lastDistance !== null) {
-        approachSpeed = (distance - lastDistance) / dt;
+        approachSpeed = (distance - lastDistance) / (dt / 1000); // mm/s
       }
-      
-      lateralSpeed = (centerX - lastCenterX) / dt;
+      lateralSpeed = (centerX - lastMarkerMetrics.current.centerX) / (dt / 1000); // px/s
     }
 
-    // Calcular estabilidad
-    const stability = Math.max(0, 100 - Math.abs(pitch) - Math.abs(yaw));
+    const stability = Math.max(0, 100 - Math.abs(yaw) - Math.abs(pitch));
 
-    // Guardar datos actuales para siguiente cálculo
-    lastMarkerData.current = {
-      distance,
-      centerX,
-      timestamp: now,
-    };
+    lastMarkerMetrics.current = { distance, centerX, timestamp: now };
 
     return {
       distance,
@@ -176,58 +142,75 @@ export const useCameraAR = () => {
   }, []);
 
   const processFrame = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !state.stream) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) {
+    if (!videoRef.current || !canvasRef.current || !state.stream || videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA) {
       animationRef.current = requestAnimationFrame(processFrame);
       return;
     }
 
-    // Configurar canvas al tamaño del video
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    // Dibujar video en canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Obtener datos de imagen
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const markers = detectArucoMarkers(imageData);
 
-    // Detectar marcadores
-    const markers = detectMarkers(imageData);
+    let metrics = {
+      distance: null,
+      angle: { pitch: null, yaw: null, roll: null },
+      speed: { approach: null, lateral: null },
+      stability: 0,
+    };
 
-    // Calcular métricas
-    const metrics = calculateMetrics(markers, performance.now());
+    if (markers.length > 0) {
+      const marker = markers[0];
+      const corners = marker.corners.map((c: any) => ({ x: c.x, y: c.y }));
+      const center = corners.reduce((acc: any, c: any) => ({ x: acc.x + c.x, y: acc.y + c.y }), { x: 0, y: 0 });
+      center.x /= 4;
+      center.y /= 4;
+      const size = Math.sqrt(
+        Math.pow(corners[1].x - corners[0].x, 2) +
+        Math.pow(corners[1].y - corners[0].y, 2)
+      );
 
-    // Actualizar estado
-    setState(prev => ({
-      ...prev,
-      markers,
-      metrics,
-      isActive: true,
-    }));
+      const arucoMarker: ARMarker = {
+        id: marker.id,
+        corners,
+        center,
+        size,
+        detected: true,
+      };
 
-    // Continuar procesamiento
+      metrics = calculateMetricsFromMarker(marker, performance.now());
+
+      setState(prev => ({
+        ...prev,
+        markers: [arucoMarker],
+        metrics,
+        isActive: true,
+      }));
+    } else {
+      setState(prev => ({
+        ...prev,
+        markers: [],
+        metrics,
+        isActive: true,
+      }));
+    }
+
     animationRef.current = requestAnimationFrame(processFrame);
-  }, [state.stream, detectMarkers, calculateMetrics]);
+  }, [state.stream, calculateMetricsFromMarker]);
 
   const startCamera = useCallback(async () => {
-    try {
-      const stream = await requestCameraPermission();
-      if (stream) {
-        // Esperar a que el video esté listo
-        if (videoRef.current) {
-          videoRef.current.onloadeddata = () => {
-            animationRef.current = requestAnimationFrame(processFrame);
-          };
-        }
-      }
-    } catch (error) {
-      console.error('Error starting camera:', error);
+    const stream = await requestCameraPermission();
+    if (stream && videoRef.current) {
+      videoRef.current.onloadedmetadata = () => {
+        animationRef.current = requestAnimationFrame(processFrame);
+      };
     }
   }, [requestCameraPermission, processFrame]);
 
@@ -235,11 +218,9 @@ export const useCameraAR = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-
     if (state.stream) {
       state.stream.getTracks().forEach(track => track.stop());
     }
-
     setState(prev => ({
       ...prev,
       stream: null,
@@ -255,16 +236,12 @@ export const useCameraAR = () => {
   }, [state.stream]);
 
   useEffect(() => {
-    // Verificar soporte inicial
-    setState(prev => ({
-      ...prev,
-      isSupported: checkCameraSupport(),
-    }));
-
+    setState(prev => ({ ...prev, isSupported: checkCameraSupport() }));
     return () => {
-      stopCamera();
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (state.stream) state.stream.getTracks().forEach(t => t.stop());
     };
-  }, [checkCameraSupport, stopCamera]);
+  }, [checkCameraSupport]);
 
   return {
     ...state,
@@ -272,9 +249,6 @@ export const useCameraAR = () => {
     canvasRef,
     startCamera,
     stopCamera,
-    captureFrame: () => {
-      if (!canvasRef.current) return null;
-      return canvasRef.current.toDataURL('image/png');
-    },
+    captureFrame: () => canvasRef.current?.toDataURL('image/png') || null,
   };
 };
