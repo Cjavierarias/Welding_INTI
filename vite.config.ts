@@ -18,12 +18,12 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'icon-192x192.png',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon-512x512.png',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
@@ -31,11 +31,7 @@ export default defineConfig({
       }
     })
   ],
-  base: '/Welding_INTI/',
   build: {
-    target: 'es2020',
-    outDir: 'dist',
-    sourcemap: false,
-    minify: 'terser'
+    target: 'es2020'
   }
 })
