@@ -134,19 +134,9 @@ export const useWeldingSimulation = (technique: WeldingTechnique) => {
     return Math.min(100, Math.max(0, totalScore));
   }, [parameters]);
 
-  const calculateSpeed = useCallback((currentPosition: { x: number; y: number }): number => {
-  const now = Date.now();
-  if (!lastPosition.current) {
-    lastPosition.current = { ...currentPosition, time: now };
-    return 0;
-  }
-  const dx = currentPosition.x - lastPosition.current.x;
-  const dy = currentPosition.y - lastPosition.current.y;
-  const dt = (now - lastPosition.current.time) / 1000; // segundos
-  const distance = Math.sqrt(dx * dx + dy * dy); // pixels
-  const speed = dt > 0 ? distance / dt : 0;
-  lastPosition.current = { ...currentPosition, time: now };
-  return speed;
+  const calculateSpeed = useCallback((approachSpeed: number | null): number => {
+  // Si no hay datos, devuelve 5 (valor neutro)
+  return approachSpeed !== null ? Math.abs(approachSpeed) : 5;
 }, []);
 
   const updateMetrics = useCallback((
@@ -155,7 +145,7 @@ export const useWeldingSimulation = (technique: WeldingTechnique) => {
     position: { x: number; y: number },
     stability: number
   ) => {
-    const speed = calculateSpeed(position);
+    const speed = calculateSpeed(camera.metrics.speed.approach);
     const quality = calculateQuality(angle, distance, speed, stability);
     const timestamp = Date.now();
 
