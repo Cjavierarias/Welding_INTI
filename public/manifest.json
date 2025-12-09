@@ -3,6 +3,7 @@
   "short_name": "WeldingSim",
   "description": "Simulador de técnicas de soldadura con realidad aumentada",
   "start_url": "/Welding_INTI/",
+  "scope": "/Welding_INTI/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#1976d2",
@@ -21,21 +22,5 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/Welding_INTI/screenshots/mobile.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "categories": ["education", "productivity"],
-  "shortcuts": [
-    {
-      "name": "Nueva práctica",
-      "short_name": "Practicar",
-      "description": "Iniciar nueva sesión de práctica",
-      "url": "/Welding_INTI/#/simulator"
-    }
-  ]
+  "categories": ["education", "productivity"]
 }
