@@ -7,28 +7,20 @@
     <meta name="description" content="Simulador de técnicas de soldadura con realidad aumentada" />
     <title>Simulador de Soldadura AR</title>
     <link rel="manifest" href="/Welding_INTI/manifest.json" />
-    <link rel="icon" href="/Welding_INTI/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" type="image/svg+xml" href="/Welding_INTI/favicon.svg" />
     <link rel="apple-touch-icon" href="/Welding_INTI/icon-192x192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script>
-      // Detectar si estamos en GitHub Pages
-      if (window.location.hostname === 'cjavierarias.github.io') {
-        window.__BASE_PATH__ = '/Welding_INTI/';
-      } else {
-        window.__BASE_PATH__ = '/';
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="text-align: center; padding: 50px; color: white; background: #121212;">
+      <div style="text-align: center; padding: 50px; color: white;">
         <h1>JavaScript requerido</h1>
         <p>Esta aplicación requiere JavaScript para funcionar. Por favor, habilítelo en tu navegador.</p>
       </div>
     </noscript>
-    <script type="module" src="/Welding_INTI/assets/index.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
