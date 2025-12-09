@@ -30,21 +30,27 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: '/Welding_INTI/index.html'
       }
     })
   ],
-  base: '/Welding_INTI/', // ← ESTA ES LA PARTE MÁS IMPORTANTE
+  base: '/Welding_INTI/',
   build: {
     target: 'es2020',
     outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
+      input: {
+        main: 'index.html'
+      },
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
-          charts: ['chart.js', 'react-chartjs-2']
-        }
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'index.css') return 'assets/index.css'
+          return 'assets/[name]-[hash][extname]'
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js'
       }
     }
   }
